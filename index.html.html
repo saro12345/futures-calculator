@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futures Tick-Rechner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .results-section {
+            background: #fff;
+            border-radius: 10px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .results-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .results-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .profit {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .loss {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .market-info {
+            background: #e8f4fd;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .calculation-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .calculation-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Futures Tick-Rechner</h1>
+            <p>Berechnen Sie Ihr Tagesziel in Ticks und Punkten</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2 class="section-title">📊 Trading Parameter</h2>
+                
+                <div class="form-group">
+                    <label for="market">Markt auswählen:</label>
+                    <select id="market">
+                        <option value="FDAX">FDAX (DAX Future) - 12.5 EUR</option>
+                        <option value="FDXM">FDXM (Mini DAX) - 5 EUR</option>
+                        <option value="FDXS">FDXS (Micro DAX) - 1 EUR</option>
+                        <option value="FGBL">FGBL (Bund Future) - 10 EUR</option>
+                        <option value="FGBM">FGBM (Bobl Future) - 5 EUR</option>
+                        <option value="FGBS">FGBS (Schatz Future) - 2.5 EUR</option>
+                        <option value="FESX">FESX (Euro Stoxx 50) - 10 EUR</option>
+                        <option value="FSXE">FSXE (Micro Euro Stoxx 50) - 0.5 EUR</option>
+                        <option value="ES">ES (E-mini S&P500) - 12.5 USD</option>
+                        <option value="MES">MES (Micro S&P500) - 1.25 USD</option>
+                        <option value="NQ">NQ (E-mini Nasdaq) - 5 USD</option>
+                        <option value="MNQ">MNQ (Micro Nasdaq) - 0.5 USD</option>
+                        <option value="YM">YM (E-mini Dow) - 5 USD</option>
+                        <option value="RTY">RTY (E-mini Russell) - 10 USD</option>
+                        <option value="6E">6E (Euro FX) - 12.5 USD</option>
+                        <option value="GC">GC (Gold) - 10 USD</option>
+                        <option value="CL">CL (Crude Oil) - 10 USD</option>
+                    </select>
+                </div>
+                
+                <div class="market-info" id="marketInfo">
+                    <strong>FDAX (DAX Future)</strong><br>
+                    Tick-Größe: 0.5 Punkte<br>
+                    Tick-Wert: 12.5 EUR<br>
+                    Kontraktwert: 25 EUR pro Punkt<br>
+                    <em>🇪🇺 EUREX - Deutsche Aktienindex Futures</em>
+                </div>
+                
+                <div class="calculation-row">
+                    <div class="form-group">
+                        <label for="contracts">Anzahl Kontrakte:</label>
+                        <input type="number" id="contracts" value="2" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tickGoal">Ziel (Ticks):</label>
+                        <input type="number" id="tickGoal" value="50" min="1">
+                    </div>
+                </div>
+                
+                <div class="calculation-row">
+                    <div class="form-group">
+                        <label for="stopLoss">Stop Loss (Ticks):</label>
+                        <input type="number" id="stopLoss" value="30" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="commission">Kommission pro Kontrakt:</label>
+                        <input type="number" id="commission" value="4" step="0.1" min="0">
+                    </div>
+                </div>
+                
+                <div class="calculation-row">
+                    <div class="form-group">
+                        <label for="tradingDays">Trading Tage:</label>
+                        <input type="number" id="tradingDays" value="20" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="winRate">Gewinnrate (%):</label>
+                        <input type="number" id="winRate" value="60" min="1" max="100">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="section-title">📈 Ergebnisse</h2>
+                
+                <div class="highlight">
+                    <strong>Tagesziel:</strong> <span id="dailyGoal">-</span><br>
+                    <strong>Ziel in Punkten:</strong> <span id="goalInPoints">-</span><br>
+                    <strong>Netto pro Trade:</strong> <span id="netPerTrade">-</span><br>
+                    <strong>Monatsziel:</strong> <span id="monthlyGoal">-</span>
+                </div>
+                
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Szenario</th>
+                            <th>Pro Trade</th>
+                            <th>Pro Tag</th>
+                            <th>Pro Monat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🎯 Take Profit</strong></td>
+                            <td class="profit" id="tpPerTrade">-</td>
+                            <td class="profit" id="tpPerDay">-</td>
+                            <td class="profit" id="tpPerMonth">-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🛑 Stop Loss</strong></td>
+                            <td class="loss" id="slPerTrade">-</td>
+                            <td class="loss" id="slPerDay">-</td>
+                            <td class="loss" id="slPerMonth">-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>💰 Erwartungswert</strong></td>
+                            <td id="evPerTrade">-</td>
+                            <td id="evPerDay">-</td>
+                            <td id="evPerMonth">-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>💸 Kommissionen</strong></td>
+                            <td class="loss" id="commPerTrade">-</td>
+                            <td class="loss" id="commPerDay">-</td>
+                            <td class="loss" id="commPerMonth">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px;">
+                    <h3>📊 Risk/Reward Ratio: <span id="rrRatio">-</span></h3>
+                    <h3>🎲 Break-Even Rate: <span id="breakEven">-</span>%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const markets = {
+            FDAX: { name: 'FDAX (DAX Future)', tickValue: 12.5, currency: 'EUR', tickSize: 0.5, pointValue: 25 },
+            FDXM: { name: 'FDXM (Mini DAX)', tickValue: 5, currency: 'EUR', tickSize: 1, pointValue: 5 },
+            FDXS: { name: 'FDXS (Micro DAX)', tickValue: 1, currency: 'EUR', tickSize: 1, pointValue: 1 },
+            FGBL: { name: 'FGBL (Bund Future)', tickValue: 10, currency: 'EUR', tickSize: 0.01, pointValue: 1000 },
+            FGBM: { name: 'FGBM (Bobl Future)', tickValue: 5, currency: 'EUR', tickSize: 0.005, pointValue: 1000 },
+            FGBS: { name: 'FGBS (Schatz Future)', tickValue: 2.5, currency: 'EUR', tickSize: 0.005, pointValue: 500 },
+            FESX: { name: 'FESX (Euro Stoxx 50)', tickValue: 10, currency: 'EUR', tickSize: 1, pointValue: 10 },
+            FSXE: { name: 'FSXE (Micro Euro Stoxx 50)', tickValue: 0.5, currency: 'EUR', tickSize: 0.5, pointValue: 1 },
+            ES: { name: 'ES (E-mini S&P500)', tickValue: 12.5, currency: 'USD', tickSize: 0.25, pointValue: 50 },
+            MES: { name: 'MES (Micro S&P500)', tickValue: 1.25, currency: 'USD', tickSize: 0.25, pointValue: 5 },
+            NQ: { name: 'NQ (E-mini Nasdaq)', tickValue: 5, currency: 'USD', tickSize: 0.25, pointValue: 20 },
+            MNQ: { name: 'MNQ (Micro Nasdaq)', tickValue: 0.5, currency: 'USD', tickSize: 0.25, pointValue: 2 },
+            YM: { name: 'YM (E-mini Dow)', tickValue: 5, currency: 'USD', tickSize: 1, pointValue: 5 },
+            RTY: { name: 'RTY (E-mini Russell)', tickValue: 10, currency: 'USD', tickSize: 0.1, pointValue: 100 },
+            '6E': { name: '6E (Euro FX)', tickValue: 12.5, currency: 'USD', tickSize: 0.0001, pointValue: 125000 },
+            GC: { name: 'GC (Gold)', tickValue: 10, currency: 'USD', tickSize: 0.1, pointValue: 100 },
+            CL: { name: 'CL (Crude Oil)', tickValue: 10, currency: 'USD', tickSize: 0.01, pointValue: 1000 }
+        };
+
+        function updateMarketInfo() {
+            const selectedMarket = document.getElementById('market').value;
+            const market = markets[selectedMarket];
+            const marketInfo = document.getElementById('marketInfo');
+            
+            let description = '';
+            if (selectedMarket.startsWith('FD')) {
+                description = '<em>🇪🇺 EUREX - Deutsche Aktienindex Futures</em>';
+            } else if (selectedMarket.startsWith('FG')) {
+                description = '<em>🇪🇺 EUREX - Deutsche Staatsanleihen Futures</em>';
+            } else if (selectedMarket.startsWith('FE') || selectedMarket.startsWith('FS')) {
+                description = '<em>🇪🇺 EUREX - Europäische Index Futures</em>';
+            } else if (['ES', 'MES', 'NQ', 'MNQ', 'YM', 'RTY'].includes(selectedMarket)) {
+                description = '<em>🇺🇸 CME - US Aktienindex Futures</em>';
+            } else if (selectedMarket === '6E') {
+                description = '<em>🇺🇸 CME - Währungs Futures</em>';
+            } else {
+                description = '<em>🇺🇸 CME/NYMEX - Rohstoff Futures</em>';
+            }
+            
+            marketInfo.innerHTML = `
+                <strong>${market.name}</strong><br>
+                Tick-Größe: ${market.tickSize} ${selectedMarket.startsWith('FG') ? '%' : 'Punkte'}<br>
+                Tick-Wert: ${market.tickValue} ${market.currency}<br>
+                ${selectedMarket.startsWith('FG') ? 'Nominalwert: 100,000 EUR' : `Punkt-Wert: ${market.pointValue} ${market.currency}`}<br>
+                ${description}
+            `;
+        }
+
+        function calculate() {
+            const selectedMarket = document.getElementById('market').value;
+            const market = markets[selectedMarket];
+            const contracts = parseInt(document.getElementById('contracts').value);
+            const tickGoal = parseInt(document.getElementById('tickGoal').value);
+            const stopLoss = parseInt(document.getElementById('stopLoss').value);
+            const commission = parseFloat(document.getElementById('commission').value);
+            const tradingDays = parseInt(document.getElementById('tradingDays').value);
+            const winRate = parseFloat(document.getElementById('winRate').value) / 100;
+
+            // Berechnungen
+            const tpValue = tickGoal * market.tickValue * contracts;
+            const slValue = stopLoss * market.tickValue * contracts;
+            const commissionPerTrade = commission * contracts * 2; // Round trip
+            
+            const tpNet = tpValue - commissionPerTrade;
+            const slNet = slValue + commissionPerTrade;
+            
+            const expectedValue = (winRate * tpNet) - ((1 - winRate) * slNet);
+            const rrRatio = tickGoal / stopLoss;
+            const breakEvenRate = stopLoss / (tickGoal + stopLoss);
+            
+            // Punkte-Berechnung
+            const goalInPoints = tickGoal * market.tickSize;
+
+            // Aktualisiere UI
+            document.getElementById('dailyGoal').textContent = `${tpValue.toFixed(2)} ${market.currency}`;
+            document.getElementById('goalInPoints').textContent = `${goalInPoints.toFixed(2)} Punkte`;
+            document.getElementById('netPerTrade').textContent = `${tpNet.toFixed(2)} ${market.currency}`;
+            document.getElementById('monthlyGoal').textContent = `${(expectedValue * tradingDays).toFixed(2)} ${market.currency}`;
+
+            document.getElementById('tpPerTrade').textContent = `+${tpNet.toFixed(2)} ${market.currency}`;
+            document.getElementById('tpPerDay').textContent = `+${tpNet.toFixed(2)} ${market.currency}`;
+            document.getElementById('tpPerMonth').textContent = `+${(tpNet * tradingDays * winRate).toFixed(2)} ${market.currency}`;
+
+            document.getElementById('slPerTrade').textContent = `-${slNet.toFixed(2)} ${market.currency}`;
+            document.getElementById('slPerDay').textContent = `-${slNet.toFixed(2)} ${market.currency}`;
+            document.getElementById('slPerMonth').textContent = `-${(slNet * tradingDays * (1-winRate)).toFixed(2)} ${market.currency}`;
+
+            document.getElementById('evPerTrade').textContent = `${expectedValue.toFixed(2)} ${market.currency}`;
+            document.getElementById('evPerDay').textContent = `${expectedValue.toFixed(2)} ${market.currency}`;
+            document.getElementById('evPerMonth').textContent = `${(expectedValue * tradingDays).toFixed(2)} ${market.currency}`;
+
+            document.getElementById('commPerTrade').textContent = `-${commissionPerTrade.toFixed(2)} ${market.currency}`;
+            document.getElementById('commPerDay').textContent = `-${commissionPerTrade.toFixed(2)} ${market.currency}`;
+            document.getElementById('commPerMonth').textContent = `-${(commissionPerTrade * tradingDays).toFixed(2)} ${market.currency}`;
+
+            document.getElementById('rrRatio').textContent = rrRatio.toFixed(2);
+            document.getElementById('breakEven').textContent = (breakEvenRate * 100).toFixed(1);
+        }
+
+        // Event Listeners
+        document.getElementById('market').addEventListener('change', function() {
+            updateMarketInfo();
+            calculate();
+        });
+
+        ['contracts', 'tickGoal', 'stopLoss', 'commission', 'tradingDays', 'winRate'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculate);
+        });
+
+        // Initialisierung
+        updateMarketInfo();
+        calculate();
+    </script>
+</body>
+</html>
